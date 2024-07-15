@@ -1,0 +1,165 @@
+unit Log4Exception;
+
+interface
+
+uses
+  System.SysUtils,
+  System.Classes,
+  Vcl.Dialogs,
+  Vcl.Forms;
+
+type
+  TLog4Exception = class(TComponent)
+  strict private
+    { Private declarations }
+
+    FPathLog: string;
+    FNameLog: string;
+    FPathAutomatico: Boolean;
+    FArquivoLog: string;
+    procedure CarregarVariaveis;
+  protected
+    { Protected declarations }
+
+    function GetPathLog: string;
+    procedure SetPathLog(const pValor: string);
+    function GetNameLog: string;
+    procedure SetNameLog(const pValor: string);
+    function GetPathAutomatico: Boolean;
+    procedure SetPathAutomatico(const pValor: Boolean);
+
+    procedure OnExceptionASVD(Sender: TObject; E: Exception);
+    procedure GravarExcecao(const pValor: string);
+    procedure ExibirExcecao(const pMessage: string);
+  public
+    { Public declarations }
+
+    constructor Create(Owner : TComponent); override;
+    destructor Destroy; override;
+  published
+    { Published declarations }
+
+    property RotaSalvarLog: string read GetPathLog write SetPathLog;
+    property NomeLog: string read GetNameLog write SetNameLog;
+    property RotaAutomatica: Boolean read GetPathAutomatico write SetPathAutomatico;
+  end;
+
+procedure Register;
+
+implementation
+
+procedure Register;
+begin
+  RegisterComponents('ASVD Componentes', [TLog4Exception]);
+end;
+
+{ TLog4Exception }
+
+procedure TLog4Exception.CarregarVariaveis;
+begin
+  if FPathAutomatico then
+  begin
+    var lPath := ExtractFilePath(ParamStr(0)) + 'Log\';
+    if not DirectoryExists(lPath) then
+      ForceDirectories(lPath);
+
+    FArquivoLog := lPath + FNameLog + '.log';
+  end else
+  begin
+    FArquivoLog := FPathLog + FNameLog + '.log';
+  end;
+end;
+
+constructor TLog4Exception.Create(Owner: TComponent);
+begin
+  inherited Create(Owner);
+  FNameLog := 'LogExcecoes';
+
+  CarregarVariaveis;
+  Application.OnException := OnExceptionASVD;
+end;
+
+destructor TLog4Exception.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TLog4Exception.ExibirExcecao(const pMessage: string);
+begin
+  ShowMessage(pMessage);
+end;
+
+function TLog4Exception.GetNameLog: string;
+begin
+  Result := FNameLog;
+end;
+
+function TLog4Exception.GetPathAutomatico: Boolean;
+begin
+  Result := FPathAutomatico;
+end;
+
+function TLog4Exception.GetPathLog: string;
+begin
+  Result := FPathLog;
+  CarregarVariaveis;
+end;
+
+procedure TLog4Exception.GravarExcecao(const pValor: string);
+begin
+  var lLogTexto: TextFile;
+  AssignFile(lLogTexto, FArquivoLog);
+
+  if FileExists(FArquivoLog) then
+    Append(lLogTexto)
+  else
+    Rewrite(lLogTexto);
+
+  Writeln(lLogTexto, FormatDateTime('dd/mm/yyyy hh:mm:ss', Now) + '- Log: ' + pValor);
+
+  CloseFile(lLogTexto);
+end;
+
+procedure TLog4Exception.OnExceptionASVD(Sender: TObject; E: Exception);
+begin
+  GravarExcecao('------------------------------');
+
+  if TComponent(Sender) is TForm then
+  begin
+    GravarExcecao('Form:' + TForm(Sender).Name);
+    GravarExcecao('Exception: ' + TForm(Sender).Caption);
+    GravarExcecao('ClassName: ' + E.ClassName);
+    GravarExcecao('Message: ' + E.Message);
+  end else
+  begin
+    GravarExcecao('Form: ' + TForm(TComponent(Sender).Owner).Name);
+    GravarExcecao('Exception: ' + TForm(TComponent(Sender).Owner).Caption);
+    GravarExcecao('ClassName: ' + E.ClassName);
+    GravarExcecao('Message: ' + E.Message);
+  end;
+
+  GravarExcecao('------------------------------');
+
+  ExibirExcecao(E.Message);
+end;
+
+procedure TLog4Exception.SetNameLog(const pValor: string);
+begin
+  FNameLog := pValor;
+  CarregarVariaveis;
+end;
+
+procedure TLog4Exception.SetPathAutomatico(const pValor: Boolean);
+begin
+  FPathAutomatico := pValor;
+  CarregarVariaveis;
+end;
+
+procedure TLog4Exception.SetPathLog(const pValor: string);
+begin
+  FPathLog := pValor;
+  CarregarVariaveis;
+end;
+
+end.

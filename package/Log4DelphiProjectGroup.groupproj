@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{91D33F0D-7548-434C-817F-9589A4D700C3}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Log4Delphi.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\samples\DemoLog4Delphi.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Log4Delphi">
+        <MSBuild Projects="Log4Delphi.dproj"/>
+    </Target>
+    <Target Name="Log4Delphi:Clean">
+        <MSBuild Projects="Log4Delphi.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Log4Delphi:Make">
+        <MSBuild Projects="Log4Delphi.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoLog4Delphi">
+        <MSBuild Projects="..\samples\DemoLog4Delphi.dproj"/>
+    </Target>
+    <Target Name="DemoLog4Delphi:Clean">
+        <MSBuild Projects="..\samples\DemoLog4Delphi.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoLog4Delphi:Make">
+        <MSBuild Projects="..\samples\DemoLog4Delphi.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Log4Delphi;DemoLog4Delphi"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Log4Delphi:Clean;DemoLog4Delphi:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Log4Delphi:Make;DemoLog4Delphi:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

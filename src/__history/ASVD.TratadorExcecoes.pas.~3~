@@ -1,0 +1,116 @@
+unit ASVD.TratadorExcecoes;
+
+interface
+
+uses
+  System.SysUtils,
+  System.Classes;
+
+type
+  TLog4Delphi = class(TComponent)
+  strict private
+    FPathLog: string;
+    FNameLog: string;
+    FPathAutomatico: Boolean;
+    FArquivoLog: string;
+  strict private
+    procedure GravarExcecao(const pValor: string);
+    procedure ExibirExcecao(const pMessage: string);
+  protected
+    { Protected declarations }
+  public
+    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure OnExceptionASVD(Sender: TObject; E: Exception);
+  published
+    { Published declarations }
+
+    property RotaSalvarLog: string read FPathLog write FPathLog;
+    property NomeLog: string read FNameLog write FNameLog;
+    property RotaAutomatica: Boolean read FPathAutomatico write FPathAutomatico;
+  end;
+
+procedure Register;
+
+implementation
+
+uses
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Vcl.ComStrs,
+  Vcl.Consts,
+  Vcl.ToolWin,
+  Vcl.ListActns;
+
+{ TLog4Delphi }
+
+constructor TLog4Delphi.Create(AOwner: TComponent);
+begin
+  inherited Create(Owner);
+
+  if FPathAutomatico then
+  begin
+    var lPath := ExtractFilePath(ParamStr(0)) + 'Log\';
+    if not DirectoryExists(lPath) then
+      ForceDirectories(lPath);
+
+    FArquivoLog := lPath + FNameLog + '.log';
+  end else
+  begin
+    FArquivoLog := FPathLog + FNameLog + '.log';
+  end;
+
+  Application.OnException := OnExceptionASVD;
+end;
+
+destructor TLog4Delphi.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TLog4Delphi.ExibirExcecao(const pMessage: string);
+begin
+  ShowMessage(pMessage);
+end;
+
+procedure TLog4Delphi.GravarExcecao(const pValor: string);
+begin
+  var lLogTexto: TextFile;
+  AssignFile(lLogTexto, FArquivoLog);
+
+  if FileExists(FArquivoLog) then
+    Append(lLogTexto)
+  else
+    Rewrite(lLogTexto);
+
+  Writeln(lLogTexto, FormatDateTime('dd/mm/yyyy hh:mm:ss', Now) + '- Log: ' + pValor);
+
+  CloseFile(lLogTexto);
+end;
+
+procedure TLog4Delphi.OnExceptionASVD(Sender: TObject; E: Exception);
+begin
+  GravarExcecao('------------------------------');
+
+  if TComponent(Sender) is TForm then
+  begin
+    GravarExcecao('Form:' + TForm(Sender).Name);
+    GravarExcecao('Exception: ' + TForm(Sender).Caption);
+    GravarExcecao('ClassName: ' + E.ClassName);
+    GravarExcecao('Message: ' + E.Message);
+  end else
+  begin
+    GravarExcecao('Form: ' + TForm(TComponent(Sender).Owner).Name);
+    GravarExcecao('Exception: ' + TForm(TComponent(Sender).Owner).Caption);
+    GravarExcecao('ClassName: ' + E.ClassName);
+    GravarExcecao('Message: ' + E.Message);
+  end;
+
+  GravarExcecao('------------------------------');
+
+  ExibirExcecao(E.Message);
+end;
+
+end.
